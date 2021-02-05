@@ -1,5 +1,6 @@
 const inquirer = require('inquirer');
-const fs = require('fs');
+const { writeFile, copyFile } = require('./utils/generate-site.js');
+// const fs = require('fs');
 // const generatePage = require('./src/page-template.js');
 
 const promptUser = () => {
@@ -40,13 +41,7 @@ const promptUser = () => {
             type: 'input',
             name: 'about',
             message: 'Provide some information about yourself:',
-            when: ({ confirmAbout }) => {
-                if (confirmAbout) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+            when: ({ confirmAbout }) => confirmAbout
         }
     ]);
 };
@@ -133,15 +128,21 @@ Add a New Project
 promptUser()
     .then(promptProject)
     .then(portfolioData => {
-        const pageHTML = generatePage(portfolioData);
-
-        fs.writeFile('./index.html', pageHTML, err => {
-            if (err) throw new Error(err);
-    
-            console.log('Portfolio complete! Check out index.html to see the output!');
-        });
+        return generatePage(portfolioData);
+    })
+    .then(pageHTML => {
+        return writeFile(pageHTML);
+    })
+    .then(writeFileResponse => {
+        console.log(writeFileResponse);
+        return copyFile();
+    })
+    .then(copyFileResponse => {
+        console.log(copyFileResponse);
+    })
+    .catch(err => {
+        console.log(err);
     });
-
 
 // page-template.js section below
 
@@ -166,7 +167,7 @@ const generateProjects = projectsArr => {
             <div class="flex-row justify-space-between">
             ${projectsArr
                 .filter(({ feature }) => feature)
-                .map(({ name, description, languages, link}) => {
+                .map(({ name, description, languages, link }) => {
                     return `
                     <div class="col-12 mb-2 bg-dark text-light p-3 flex-column">
                         <h3 class="portfolio-item-title text-light">${name}</h3>
